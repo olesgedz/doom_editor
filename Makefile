@@ -122,6 +122,9 @@ clean:
 dd:
 	rm $(NAME)
 
+lib:
+	 @$(MAKE) -sC $(LIBSDL_DIRECTORY) re
+
 fclean: clean
 	@rm -r $(LIBFT)
 	@echo "$(NAME): $(RED)$(LIBFT) was deleted$(RESET)"
