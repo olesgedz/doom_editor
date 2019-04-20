@@ -6,7 +6,7 @@
 /*   By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/18 12:53:03 by jblack-b          #+#    #+#             */
-/*   Updated: 2019/04/19 23:23:26 by jblack-b         ###   ########.fr       */
+/*   Updated: 2019/04/20 14:19:49 by jblack-b         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,15 +28,26 @@ int ft_point_compare(t_list *list, void *target)
 		}
 	return (0);
 }
+int ft_point_compare_range(t_list *list, void *target, int range)
+{
+	if ((((t_point *)list->content)->x - 5 <= ((t_point *)target)->x)  && (((t_point *)list->content)->x + 5 >= ((t_point *)target)->x)
+	 &&	(((t_point *)list->content)->y - 5 <= ((t_point *)target)->y) && ((t_point *)list->content)->y + 5 >= ((t_point *)target)->y)
+		{
+			printf("S:%d %d %d %d\n", ((t_point *)list->content)->x,((t_point *)target)->x,
+			((t_point *)list->content)->y , ((t_point *)target)->y);
+			return (1);
+		}
+	return (0);
+}
 void ft_lst_free(void *content, size_t size)
 {
-	ft_memdel((void **)content);
+	ft_memdel((void **)&content);
 }
-t_list		*ft_list_search(t_list *lst, void *target, int (*f)(t_list *, void *))
+t_list		*ft_list_search(t_list *lst, void *target, int (*f)(t_list *, void *, int))
 {
 	while (lst != NULL)
 	{
-		if (f(lst, target))
+		if (f(lst, target, 5))
 			return (lst);
 		lst = lst->next;
 	}
@@ -45,12 +56,14 @@ t_list		*ft_list_search(t_list *lst, void *target, int (*f)(t_list *, void *))
 
 void ft_put_vertex(t_game *game)
 {
-	
 	ft_put_pixel(game->image, &(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, 0xFF0000);
-	if (ft_list_search(game->verties, &(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, ft_point_compare))
+	if (ft_list_search(game->verties, &(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, ft_point_compare_range))
 	{
-		printf("YIIIIS\n");
-		//ft_lstdel(&game->verties, ft_lst_free);
+		printf("Connected\n");
+		game->finished = 1;
+		ft_lstdel(&game->verties, ft_lst_free);
+		game->sdl->mouse.last_x = -1;
+		game->sdl->mouse.last_y = -1;
 	}
 	ft_lstadd(&game->verties, ft_lstnew(&(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, sizeof(t_point)));
 	printf("%d %d\n", ((t_point *)game->verties->content)->x, ((t_point *)game->verties->content)->y);
@@ -63,10 +76,24 @@ void ft_mouse_pressed(t_game *game, SDL_Event *ev)
 	game->sdl->mouse.last_y = game->sdl->mouse.y;
 	game->sdl->mouse.x = ev->button.x;
 	game->sdl->mouse.y = ev->button.y;
-	ft_put_vertex(game);
-	if (game->sdl->mouse.last_x > 0)
+	game->finished  = 0;
+
+	ft_put_pixel(game->image, &(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, 0xFF0000);
+	if (ft_list_search(game->verties, &(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, ft_point_compare_range))
+	{
+		printf("Connected\n");
+		game->finished  = 1;
+			ft_plot_line(game->image, &(t_point){game->sdl->mouse.last_x, game->sdl->mouse.last_y},\
+		&(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, 0x00FF00);
+			game->sdl->mouse.x = -1;
+			game->sdl->mouse.y = -1;
+		
+	}
+	ft_lstadd(&game->verties, ft_lstnew(&(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, sizeof(t_point)));
+	if (game->sdl->mouse.last_x > -1 && game->finished  == 0) 
 		ft_plot_line(game->image, &(t_point){game->sdl->mouse.last_x, game->sdl->mouse.last_y},\
-	 		&(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, 0x00FF00);
+		&(t_point){game->sdl->mouse.x, game->sdl->mouse.y}, 0x00FF00);
+
 }
 
 int		ft_input_keys(t_sdl *sdl, SDL_Event *ev)
@@ -100,7 +127,6 @@ void ft_update(t_game *game)
 	{
 		ft_surface_clear(game->sdl->surface);
 		ft_input(game->sdl, &ft_input_keys);
-		ft_put_pixel(game->sdl->surface, &(t_point){500,500}, 0xFF0000);
 		ft_surface_combine(game->sdl->surface, game->image, &r);
 		ft_surface_present(game->sdl, game->sdl->surface);
 	}
@@ -108,9 +134,11 @@ void ft_update(t_game *game)
 
 int main()
 {
-
 	game.sdl = malloc(sizeof(t_sdl));
 	game.image = ft_surface_create(WIN_W, WIN_H);
+	game.sdl->mouse.x = -1;
+	game.sdl->mouse.y = -1;
+	game.finished = 0;
 	ft_init_window(game.sdl, WIN_W, WIN_H);
 	printf("%zu, %zu\n", game.sdl->surface->height, game.sdl->surface->width);
 

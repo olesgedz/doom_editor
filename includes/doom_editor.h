@@ -63,5 +63,6 @@ typedef struct s_game
 	t_sdl *sdl;
 	t_surface *image;
 	t_list *verties;
+	int finished;
 } t_game;
 #endif
