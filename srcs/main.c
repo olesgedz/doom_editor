@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jblack-b <jblack-b@student.42.fr>          +#+  +:+       +#+        */
+/*   By: olesgedz <olesgedz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/04/18 12:53:03 by jblack-b          #+#    #+#             */
-/*   Updated: 2019/04/20 14:19:49 by jblack-b         ###   ########.fr       */
+/*   Updated: 2019/04/23 01:10:53 by olesgedz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,9 @@
 #include <stdio.h>
 #include "libsdl.h"
 #include "doom_editor.h"
-
-	t_game game;
+#include <fcntl.h>
+#include <unistd.h>
+t_game game;
 
 int ft_point_compare(t_list *list, void *target)
 {
@@ -100,14 +101,22 @@ int		ft_input_keys(t_sdl *sdl, SDL_Event *ev)
 {
 	switch (ev->type)
 		{
+
 			case SDL_KEYDOWN:
+				switch (ev->key.keysym.sym)
+				{
+					case SDLK_z: printf("hello\n"); break;
+					case SDLK_s: ft_ppm_image_write(game.image); break;					
+					case SDLK_x: ; break;
+					case SDLK_c: ; break;
+					default: break;
+				}
 			case SDL_KEYUP:
 				switch (ev->key.keysym.sym)
 				{
 					case SDLK_LCTRL:
 					case SDLK_RCTRL:
 					case SDLK_ESCAPE: ft_exit(NULL); break;
-					case SDLK_z: ; break;
 					case SDLK_x: ; break;
 					case SDLK_c: ; break;
 					default: break;
@@ -132,10 +141,13 @@ void ft_update(t_game *game)
 	}
 }
 
+
+
 int main()
 {
 	game.sdl = malloc(sizeof(t_sdl));
 	game.image = ft_surface_create(WIN_W, WIN_H);
+	int count = 0;
 	game.sdl->mouse.x = -1;
 	game.sdl->mouse.y = -1;
 	game.finished = 0;
@@ -143,5 +155,8 @@ int main()
 	printf("%zu, %zu\n", game.sdl->surface->height, game.sdl->surface->width);
 
 	ft_update(&game);
+	 //ft_ppm_image_read("out.ppm");
+
+	
 	ft_exit(NULL);
 }
